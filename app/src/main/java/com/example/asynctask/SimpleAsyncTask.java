@@ -1,46 +1,58 @@
 package com.example.asynctask;
 
 import android.os.AsyncTask;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.Random;
 
-public class SimpleAsyncTask extends AsyncTask<Void,Void, String> {
+public class SimpleAsyncTask extends AsyncTask<Void, Integer, String> {
 
     private WeakReference<TextView> mTextView;
+    private WeakReference<ProgressBar> mProgressBar;
+    private static final int fragmentoProgress = 5;
 
     /**
      * Constructor
      * @param tv
+     * @param  bar
      */
-    SimpleAsyncTask(TextView tv) {
+    SimpleAsyncTask (TextView tv, ProgressBar bar){
         mTextView = new WeakReference<>(tv);
+        mProgressBar = new WeakReference<>(bar);
     }//fin del constructor
 
     @Override
     protected String doInBackground(Void... voids) {
-        // Generate a random number between 0 and 10.
-        Random r = new Random();
-        int n = r.nextInt(11);
+        Random random = new Random();
+        int number = random.nextInt(11);
+        int milli = number * 400;
+        int chunkSize = milli / fragmentoProgress;
 
-        // Make the task take long enough that we have
-        // time to rotate the phone while it is running.
-        int s = n * 200;
-
-        // Sleep for the random amount of time.
-        try {
-            Thread.sleep(s);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int i = 0; i <fragmentoProgress; i++){
+            try {
+                Thread.sleep(chunkSize);
+            }
+            catch (InterruptedException e){
+                e.printStackTrace();
+            }
+            publishProgress(((i + 1) * 100) / fragmentoProgress);
         }
 
-        // Return a String result.
-        return "Awake at last after sleeping for " + s + " milliseconds!";
+        return "Awake after sleeping for " + milli + " milliseconds";
     }//fin del método doInBackground
 
+    /**
+     * Método onPostExecute
+     * @param result
+     */
     protected void onPostExecute(String result) {
         mTextView.get().setText(result);
-    }
+    }//fin del método onPostExecute
 
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        mProgressBar.get().setProgress(values[0]);
+    }
 }//fin de la clase SimpleAsyncTask
